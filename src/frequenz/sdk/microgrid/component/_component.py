@@ -10,6 +10,7 @@ from enum import Enum
 from typing import Optional
 
 import frequenz.api.common.components_pb2 as components_pb
+import frequenz.api.microgrid.grid_pb2 as grid_pb
 import frequenz.api.microgrid.inverter_pb2 as inverter_pb
 
 
@@ -106,6 +107,68 @@ def _component_category_from_protobuf(
     return ComponentCategory(component_category)
 
 
+class ComponentMetadata:
+    """Base class for component metadata classes."""
+
+
+class GridMetadata(ComponentMetadata):
+    """Metadata for a grid connection point.
+
+    This could have been a dataclass, but making it a data class makes `Component`
+    unhashable, which a requirement for the `ComponentGraph` class.
+    """
+
+    def __init__(self, max_current: float):
+        """Initialize a new instance.
+
+        Args:
+            max_current: maximum current the grid connection point can handle,
+                in Amperes.
+        """
+        self._max_current_a = max_current
+
+    def __eq__(self, rhs: GridMetadata) -> bool:  # type: ignore
+        """Check if two instances are equal.
+
+        Args:
+            rhs: instance to compare against.
+
+        Returns:
+            `True` if `rhs` is a `GridMetadata` instance and `max_current` is
+                equal, `False` otherwise.
+        """
+        if isinstance(rhs, GridMetadata):
+            return self.max_current == rhs.max_current
+        return False
+
+    def __hash__(self) -> int:
+        """Compute a hash of this instance.
+
+        Returns:
+            Hash of `max_current`.
+        """
+        return hash(self.max_current)
+
+    @property
+    def max_current(self) -> float:
+        """Maximum current the grid connection point can handle, in Amperes.
+
+        Returns:
+            Maximum current the grid connection point can handle, in Amperes.
+        """
+        return self._max_current_a
+
+
+def _component_metadata_from_protobuf(
+    component_category: components_pb.ComponentCategory.ValueType,
+    component_metadata: grid_pb.Metadata,
+) -> Optional[GridMetadata]:
+    if component_category == components_pb.ComponentCategory.COMPONENT_CATEGORY_GRID:
+        return GridMetadata(float(component_metadata.rated_fuse_current))
+
+    return None
+
+
 @dataclass(frozen=True)
 class Component:
     """Metadata for a single microgrid component."""
@@ -113,6 +176,7 @@ class Component:
     component_id: int
     category: ComponentCategory
     type: Optional[ComponentType] = None
+    metadata: Optional[ComponentMetadata] = None
 
     def is_valid(self) -> bool:
         """Check if this instance contains valid data.
