@@ -107,7 +107,6 @@ class TestMicrogridGrpcClient:
                         100,
                         components_pb.ComponentCategory.COMPONENT_CATEGORY_UNSPECIFIED,
                     ),
-                    (101, components_pb.ComponentCategory.COMPONENT_CATEGORY_GRID),
                     (104, components_pb.ComponentCategory.COMPONENT_CATEGORY_METER),
                     (105, components_pb.ComponentCategory.COMPONENT_CATEGORY_INVERTER),
                     (106, components_pb.ComponentCategory.COMPONENT_CATEGORY_BATTERY),
@@ -119,10 +118,14 @@ class TestMicrogridGrpcClient:
                 ]
             )
 
+            servicer.add_component(
+                101, components_pb.ComponentCategory.COMPONENT_CATEGORY_GRID, 123
+            )
+
             assert set(await microgrid.components()) == {
                 Component(100, ComponentCategory.NONE),
                 Component(
-                    101, ComponentCategory.GRID, None, GridMetadata(max_current=0.0)
+                    101, ComponentCategory.GRID, None, GridMetadata(max_current=123.0)
                 ),
                 Component(104, ComponentCategory.METER),
                 Component(105, ComponentCategory.INVERTER, InverterType.NONE),
@@ -140,6 +143,7 @@ class TestMicrogridGrpcClient:
             servicer.add_component(
                 99,
                 components_pb.ComponentCategory.COMPONENT_CATEGORY_INVERTER,
+                None,
                 components_pb.InverterType.INVERTER_TYPE_BATTERY,
             )
 
