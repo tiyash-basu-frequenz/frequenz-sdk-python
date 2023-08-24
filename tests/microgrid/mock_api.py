@@ -175,6 +175,11 @@ class MockMicrogridServicer(  # pylint: disable=too-many-public-methods
             connections = filter(lambda c: c.end in request.ends, connections)
         return ConnectionList(connections=connections)
 
+    def ListAllConnections(self) -> ConnectionList:
+        """Return a list of all connections."""
+        connections: Iterable[Connection] = self._connections
+        return ConnectionList(connections=connections)
+
     def StreamComponentData(
         self, request: ComponentIdParam, context: grpc.ServicerContext
     ) -> Iterator[ComponentData]:
