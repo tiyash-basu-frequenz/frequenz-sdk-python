@@ -492,7 +492,7 @@ class _MicrogridComponentGraph(ComponentGraph):
             _provisional.validate()
         except Exception as err:
             raise InvalidGraphError(
-                "Cannot populate component graph from provided input!"
+                f"Failed to initialise component graph: {err}"
             ) from err
 
         old_graph = self._graph
