@@ -7,7 +7,9 @@ Tests for the GridConnection module.
 
 from frequenz.sdk import microgrid
 from frequenz.sdk.microgrid.component import Component, ComponentCategory, GridMetadata
+from frequenz.sdk.microgrid.fuse import Fuse
 from frequenz.sdk.microgrid.grid_connection import GridConnection
+from frequenz.sdk.timeseries import Current
 
 
 async def test_grid_connection() -> None:
@@ -51,4 +53,11 @@ async def test_grid_connection() -> None:
     microgrid.grid_connection.initialize(components)
 
     grid_connection = microgrid.grid_connection.get()
-    assert grid_connection == GridConnection(max_current=123.0)
+
+    # Each phase should have the same fuse current
+    expected_fuse_current = Current.from_amperes(123.0)
+    expected_fuse = Fuse(
+        expected_fuse_current, expected_fuse_current, expected_fuse_current
+    )
+
+    assert grid_connection == GridConnection(fuse=expected_fuse)
