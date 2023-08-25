@@ -21,3 +21,9 @@ class Fuse:
     rated_current_phase_1: Current
     rated_current_phase_2: Current
     rated_current_phase_3: Current
+
+    def __hash__(self) -> int:
+        current_phase_1 = self.rated_current_phase_1.as_amperes()
+        current_phase_2 = self.rated_current_phase_2.as_amperes()
+        current_phase_3 = self.rated_current_phase_3.as_amperes()
+        return hash((current_phase_1, current_phase_2, current_phase_3))

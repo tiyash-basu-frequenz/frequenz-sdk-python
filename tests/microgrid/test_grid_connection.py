@@ -19,6 +19,9 @@ async def test_grid_connection() -> None:
     # is a singleton. Once it gets created, it stays in memory for the duration of
     # the tests, unless we explicitly delete it.
 
+    fuse_current = Current.from_amperes(123.0)
+    fuse = Fuse(fuse_current, fuse_current, fuse_current)
+
     # validate islands with no grid connection
     components = [
         Component(2, ComponentCategory.METER),
@@ -31,8 +34,8 @@ async def test_grid_connection() -> None:
 
     # validate error when there are multiple grid connections
     components = [
-        Component(1, ComponentCategory.GRID, None, GridMetadata(123.0)),
-        Component(2, ComponentCategory.GRID, None, GridMetadata(345.0)),
+        Component(1, ComponentCategory.GRID, None, GridMetadata(fuse)),
+        Component(2, ComponentCategory.GRID, None, GridMetadata(fuse)),
         Component(3, ComponentCategory.METER),
     ]
 
@@ -46,7 +49,7 @@ async def test_grid_connection() -> None:
 
     # validate when there is one grid connection
     components = [
-        Component(1, ComponentCategory.GRID, None, GridMetadata(123.0)),
+        Component(1, ComponentCategory.GRID, None, GridMetadata(fuse)),
         Component(2, ComponentCategory.METER),
     ]
 
@@ -54,10 +57,4 @@ async def test_grid_connection() -> None:
 
     grid_connection = microgrid.grid_connection.get()
 
-    # Each phase should have the same fuse current
-    expected_fuse_current = Current.from_amperes(123.0)
-    expected_fuse = Fuse(
-        expected_fuse_current, expected_fuse_current, expected_fuse_current
-    )
-
-    assert grid_connection == GridConnection(fuse=expected_fuse)
+    assert grid_connection == GridConnection(fuse=fuse)

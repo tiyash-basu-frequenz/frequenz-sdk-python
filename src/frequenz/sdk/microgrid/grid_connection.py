@@ -14,7 +14,6 @@ from typing import Iterable, Optional
 from .component import Component
 from .component._component import ComponentCategory
 from .fuse import Fuse
-from ..timeseries import Current
 
 
 @dataclass(frozen=True)
@@ -61,9 +60,7 @@ def initialize(components: Iterable[Component]) -> None:
             f"Expected at most one grid connection, got {len(grid_connections)}"
         )
     else:
-        max_current = Current.from_amperes(grid_connections[0].metadata.max_current)  # type: ignore
-        fuse = Fuse(max_current, max_current, max_current)
-        _GRID_CONNECTION = GridConnection(fuse)
+        _GRID_CONNECTION = GridConnection(grid_connections[0].metadata.fuse)
 
 
 def get() -> Optional[GridConnection]:

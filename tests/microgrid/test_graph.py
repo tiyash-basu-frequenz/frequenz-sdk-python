@@ -24,6 +24,8 @@ from frequenz.sdk.microgrid.component import (
     GridMetadata,
     InverterType,
 )
+from frequenz.sdk.microgrid.fuse import Fuse
+from frequenz.sdk.timeseries import Current
 
 from .mock_api import MockGrpcServer, MockMicrogridServicer
 
@@ -821,8 +823,11 @@ class Test_MicrogridComponentGraph:
         servicer.set_connections([(101, 111), (111, 131)])
         await graph.refresh_from_api(client)
 
+        fuse_current = Current.from_amperes(0.0)
+        fuse = Fuse(fuse_current, fuse_current, fuse_current)
+
         expected = {
-            Component(101, ComponentCategory.GRID, None, GridMetadata(max_current=0.0)),
+            Component(101, ComponentCategory.GRID, None, GridMetadata(fuse=fuse)),
             Component(111, ComponentCategory.METER),
             Component(131, ComponentCategory.EV_CHARGER),
         }
@@ -847,8 +852,12 @@ class Test_MicrogridComponentGraph:
         )
         servicer.set_connections([(707, 717), (717, 727), (727, 737), (717, 747)])
         await graph.refresh_from_api(client)
+
+        fuse_current = Current.from_amperes(0.0)
+        fuse = Fuse(fuse_current, fuse_current, fuse_current)
+
         expected = {
-            Component(707, ComponentCategory.GRID, None, GridMetadata(max_current=0.0)),
+            Component(707, ComponentCategory.GRID, None, GridMetadata(fuse=fuse)),
             Component(717, ComponentCategory.METER),
             Component(727, ComponentCategory.INVERTER, InverterType.NONE),
             Component(737, ComponentCategory.BATTERY),
