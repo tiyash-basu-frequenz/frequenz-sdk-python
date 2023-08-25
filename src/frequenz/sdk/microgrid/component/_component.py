@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
 from typing import Optional
@@ -12,6 +13,9 @@ from typing import Optional
 import frequenz.api.common.components_pb2 as components_pb
 import frequenz.api.microgrid.grid_pb2 as grid_pb
 import frequenz.api.microgrid.inverter_pb2 as inverter_pb
+
+from ...timeseries import Current
+from ..fuse import Fuse
 
 
 class ComponentType(Enum):
@@ -107,8 +111,17 @@ def _component_category_from_protobuf(
     return ComponentCategory(component_category)
 
 
-class ComponentMetadata:
+class ComponentMetadata(ABC):
     """Base class for component metadata classes."""
+
+    @abstractmethod
+    @property
+    def fuse(self) -> Optional[Fuse]:
+        """Get the fuse associated with this component.
+
+        Returns:
+            The fuse associated with this component.
+        """
 
 
 class GridMetadata(ComponentMetadata):
@@ -118,14 +131,13 @@ class GridMetadata(ComponentMetadata):
     unhashable, which a requirement for the `ComponentGraph` class.
     """
 
-    def __init__(self, max_current: float):
+    def __init__(self, fuse: Fuse):
         """Initialize a new instance.
 
         Args:
-            max_current: maximum current the grid connection point can handle,
-                in Amperes.
+            fuse: The fuse associated with this grid connection point.
         """
-        self._max_current_a = max_current
+        self._fuse = fuse
 
     def __eq__(self, rhs: GridMetadata) -> bool:  # type: ignore
         """Check if two instances are equal.
@@ -134,29 +146,29 @@ class GridMetadata(ComponentMetadata):
             rhs: instance to compare against.
 
         Returns:
-            `True` if `rhs` is a `GridMetadata` instance and `max_current` is
+            `True` if `rhs` is a `GridMetadata` instance and `fuse` is
                 equal, `False` otherwise.
         """
         if isinstance(rhs, GridMetadata):
-            return self.max_current == rhs.max_current
+            return self._fuse == rhs.fuse
         return False
 
     def __hash__(self) -> int:
         """Compute a hash of this instance.
 
         Returns:
-            Hash of `max_current`.
+            Hash of this instance.
         """
-        return hash(self.max_current)
+        return hash(self._fuse)
 
     @property
-    def max_current(self) -> float:
-        """Maximum current the grid connection point can handle, in Amperes.
+    def fuse(self) -> Optional[Fuse]:
+        """Get the fuse associated with this grid connection point.
 
         Returns:
-            Maximum current the grid connection point can handle, in Amperes.
+            The fuse associated with this grid connection point.
         """
-        return self._max_current_a
+        return self._fuse
 
 
 def _component_metadata_from_protobuf(
@@ -164,7 +176,9 @@ def _component_metadata_from_protobuf(
     component_metadata: grid_pb.Metadata,
 ) -> Optional[GridMetadata]:
     if component_category == components_pb.ComponentCategory.COMPONENT_CATEGORY_GRID:
-        return GridMetadata(float(component_metadata.rated_fuse_current))
+        max_current = Current.from_amperes(component_metadata.rated_fuse_current)
+        fuse = Fuse(max_current, max_current, max_current)
+        return GridMetadata(fuse)
 
     return None
 

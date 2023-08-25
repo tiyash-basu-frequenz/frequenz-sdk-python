@@ -366,6 +366,17 @@ class Quantity:
         absolute._base_value = abs(self._base_value)
         return absolute
 
+    def __hash__(self) -> int:
+        """Compute a hash of this instance.
+
+        This needs to be implemented manually, because `self._exponent_unit_map`
+        is unhashable by default.
+
+        Returns:
+            Hash of this instance.
+        """
+        return hash((self.base_value, self.base_unit))
+
 
 class _NoDefaultConstructible(type):
     """A metaclass that disables the default constructor."""
