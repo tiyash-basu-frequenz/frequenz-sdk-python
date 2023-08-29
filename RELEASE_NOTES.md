@@ -18,6 +18,7 @@
 
 - A new class `Fuse` has been added to represent fuses. This class has a member variable `max_current` which represents the maximum current that can course through the fuse. If the current flowing through a fuse is greater than this limit, then the fuse will break the circuit.
 
+- The CI now runs cross-arch tests on `aarch64` architectures.
 
 ## Bug Fixes
 
