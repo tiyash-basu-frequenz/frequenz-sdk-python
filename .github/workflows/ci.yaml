@@ -94,7 +94,6 @@ jobs:
 
   nox-cross-arch:
     name: Cross-arch tests with nox
-    if: github.event_name != 'pull_request'
     strategy:
       fail-fast: false
       # Before adding new items to this matrix, make sure that a dockerfile
@@ -166,6 +165,19 @@ jobs:
       # before running is a workaround to this issue.
       - name: Set pip cache owners to root for docker
         run: if [[ -e /tmp/pip-cache ]]; then sudo chown -R root:root /tmp/pip-cache; fi
+
+      - name: Run nox
+        run: |
+          docker run \
+            --rm \
+            -v $(pwd):/${{ github.workspace }} \
+            -v /tmp/pip-cache:/root/.cache/pip \
+            -w ${{ github.workspace }} \
+            --net=host \
+            --platform linux/${{ matrix.arch }} \
+            localhost/nox-cross-arch:latest \
+            which python3
+        timeout-minutes: 30
 
       - name: Run nox
         run: |
